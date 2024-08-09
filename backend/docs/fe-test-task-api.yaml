@@ -1,0 +1,298 @@
+openapi: 3.1.0
+info:
+  title: Frontend test task API
+  description: |-
+    API for a frontend test task
+  contact:
+    email: aroundw@gmail.com
+  version: 0.0.1
+servers:
+  - url: http://localhost:8080
+tags:
+  - name: auth
+    description: Authentication
+  - name: user
+    description: User-related methods
+  - name: other
+    description: Additional services
+security:
+  - jwt: []
+paths:
+  /auth:
+    post:
+      tags:
+        - auth
+      description: Login to the service
+      summary: authentication
+      operationId: auth
+      security: []
+      requestBody:
+        $ref: '#/components/requestBodies/auth'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/auth'
+        '400':
+          description: Invalid packet
+        '404':
+          description: Not found
+
+  /health-check:
+    get:
+      tags:
+        - other
+      description: Check backend status
+      summary: Check backend status
+      operationId: healthCheck
+      security: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            text/plain:
+              schema:
+                type: string
+        '500':
+          description: Backend internal error
+
+  /users/me:
+    get:
+      tags:
+        - user
+      description: Get current user data
+      summary: get current user
+      operationId: usersMe
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/userMe'
+        '400':
+          description: Invalid packet
+        '404':
+          description: Not found
+
+  /users/{user_id}:
+    get:
+      tags:
+        - user
+      description: Get user data by id
+      summary: get user by ID
+      operationId: userById
+      parameters:
+        - $ref: '#/components/parameters/userId'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user'
+        '400':
+          description: Invalid packet
+        '404':
+          description: Not found
+    delete:
+      tags:
+        - user
+      description: Delete user by id
+      summary: delete user by ID
+      operationId: userDeleteById
+      parameters:
+        - $ref: '#/components/parameters/userId'
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid packet
+        '404':
+          description: Not found
+    put:
+      tags:
+        - user
+      description: Update user data by id
+      summary: update user by ID
+      operationId: userUpdateById
+      parameters:
+        - $ref: '#/components/parameters/userId'
+      requestBody:
+        $ref: '#/components/requestBodies/userAdd'        
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user'
+        '400':
+          description: Invalid packet
+        '404':
+          description: Not found
+
+  /users:
+    get:
+      tags:
+        - user
+      description: Get users
+      summary: get users
+      operationId: users
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/users'
+        '400':
+          description: Invalid packet
+        '404':
+          description: Not found
+    post:
+      tags:
+        - user
+      description: Add user
+      summary: add user
+      operationId: userAdd
+      requestBody:
+        $ref: '#/components/requestBodies/userAdd'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/addResponse'
+        '400':
+          description: Invalid packet
+        '404':
+          description: Not found
+        '409':
+          description: Conflict
+
+components:
+  schemas:
+    authReq:
+      type: object
+      properties:
+        login:
+          type: string
+        password:
+          type: string
+    userAddReq:
+      type: object
+      properties:
+        is_active:
+          type: boolean
+        name:
+          type: string   
+        login:
+          type: string
+        password:
+          type: string
+        role_id:
+          type: number
+        email:
+          type: string
+        phone:
+          type: string
+      required: 
+        - is_active
+        - name
+        - login
+        - password
+        - role_id
+
+    addResponse:
+      type: object
+      properties:
+        id:
+          type: number
+
+    auth:
+      type: object
+      properties:
+        role:
+          type: string
+        token:
+          type: string
+        user_id:
+          type: number
+
+    user:
+      type: object
+      properties:
+        id:
+          type: number
+        is_active:
+          type: boolean
+        name:
+          type: string
+        login:
+          type: string
+        password:
+          type: string
+        role:
+          type: string
+        role_id:
+          type: number
+        email:
+          type: string
+        phone:
+          type: string
+
+    userMe:
+      allOf: 
+        - $ref: '#/components/schemas/user'
+        - type: object
+          properties:
+            config:
+              type: object
+              properties:
+                roles:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+
+    users:
+      type: array
+      items:
+        $ref: '#/components/schemas/user'
+
+  requestBodies:
+    auth:
+      description: Data for auth
+      content:
+        'application/json':
+          schema:
+            $ref: '#/components/schemas/authReq'
+    userAdd:
+      description: Data for create user
+      content:
+        'application/json':
+          schema:
+            $ref: '#/components/schemas/userAddReq'
+
+  parameters:
+    userId:
+      name: 'user_id'
+      in: path
+      description: 'user ID'
+      required: true
+      schema:
+        type: number
+
+  securitySchemes:
+    jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
